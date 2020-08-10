@@ -70,8 +70,7 @@ def account():
         form.email.data = current_user.email
     image_file = url_for(
         'static',
-        filename='profile_pics/' +
-        current_user.image_file)
+        filename='profile_pics/' + current_user.image_file)
     return render_template('account.html', title='Account',
                            image_file=image_file, form=form)
 

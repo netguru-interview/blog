@@ -1,6 +1,6 @@
 from flask.cli import FlaskGroup
 from flaskblog import create_app, db
-from flaskblog.models import User, Post
+from flaskblog.models import User
 
 app = create_app()
 

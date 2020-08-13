@@ -129,4 +129,6 @@ dmypy.json
 .pyre/
 
 # Chart dependencies
-**/charts/*.tgz
+**/charts/charts/*.tgz
+charts/secrets.yaml
+charts/requirements.lock

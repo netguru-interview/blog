@@ -1,0 +1,33 @@
+---
+repos:
+  - repo: git://github.com/pre-commit/pre-commit-hooks
+    rev: v3.1.0
+    hooks:
+      - id: check-byte-order-marker
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+  - repo: git://github.com/adrienverge/yamllint
+    rev: v1.24.2
+    hooks:
+      - id: yamllint
+        files: \.(yaml|yml)$
+        types: [file, yaml]
+        exclude: ^helm-charts
+        entry: yamllint --strict
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.3
+    hooks:
+      - id: flake8
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.9
+    hooks:
+      - id: helmlint
+        files: helm-charts/.*\.((ya?ml)|(tpl))$
+        types: [yaml]
+        require_serial: true
+        exclude: ^(?!helm\-charts)
+      - id: shellcheck

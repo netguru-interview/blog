@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # Chart dependencies
-**/charts/charts/*.tgz
-charts/secrets.yaml
-charts/requirements.lock
+**/helm-charts/charts/*.tgz
+helm-charts/secrets.yaml
+helm-charts/requirements.lock
 .dep_check

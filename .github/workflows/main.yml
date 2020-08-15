@@ -1,0 +1,27 @@
+---
+# yamllint disable rule:line-length
+
+name: Main
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - "**"
+  schedule:
+    - cron: "0 0 */2 * *"
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    container:
+      image: shmileee/pre-commit:latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Run tests
+        run: |
+          make test

@@ -27,16 +27,16 @@ confirm_prompt() {
   read -r -p "[?] Are you sure? [Y/n] " input
 
   case $input in
-      [yY][eE][sS]|[yY])
-   return 0
-   ;;
-      [nN][oO]|[nN])
-   exit 1
-         ;;
-      *)
-   echo "Invalid input."
-   exit 1
-   ;;
+    [yY][eE][sS] | [yY])
+      return 0
+      ;;
+    [nN][oO] | [nN])
+      exit 1
+      ;;
+    *)
+      echo "Invalid input."
+      exit 1
+      ;;
   esac
 }
 
@@ -44,13 +44,14 @@ confirm_prompt() {
 while [[ $# -gt 0 ]]; do
   arg=$1
   case $arg in
-    -h|--help)
+    -h | --help)
       display_help
-      exit 0 ;;
-    -c|--clean)
+      exit 0
+      ;;
+    -c | --clean)
       CLEAN="true"
       ;;
-    -r|--release-name)
+    -r | --release-name)
       RELEASE_NAME=${2}
       shift
       ;;
@@ -89,7 +90,7 @@ dep_check() {
 
   for dep in $deps; do
     echo "[+] Checking for installed dependency: $dep"
-    if ! which "${dep//_/-}" &>/dev/null; then
+    if ! which "${dep//_/-}" &> /dev/null; then
       echo "[-] Missing dependency: $dep"
       echo "[+] Attempting to install:"
       install_"${dep}"
@@ -102,9 +103,9 @@ dep_check() {
 
 # Run dependency check once (see above for dep check)
 if [ ! -f ".dep_check" ]; then
-    dep_check
+  dep_check
 else
-    echo "[+] Dependency check previously conducted. To rerun remove file .dep_check."
+  echo   "[+] Dependency check previously conducted. To rerun remove file .dep_check."
 fi
 
 helm repo add stable "${HELM_STABLE_REPO}" > /dev/null
@@ -118,14 +119,14 @@ fi
 if [ "${CLEAN}" == "true" ]; then
   echo "[-] Deleting all resources in namespace -> ${RELEASE_NAME}."
   confirm_prompt
-  kubectl get ns "${RELEASE_NAME}" >/dev/null 2>&1 && kubectl delete ns "${RELEASE_NAME}"
+  kubectl get ns "${RELEASE_NAME}" > /dev/null 2>&1 && kubectl delete ns "${RELEASE_NAME}"
 fi
 
 # Create namespace where helm will deploy resources
 # https://github.com/helm/helm/issues/6794
 
 echo "[+] Attempting to create ${RELEASE_NAME} namespace"
-cat <<EOF | kubectl apply -f -
+cat << EOF | kubectl apply -f -
 apiVersion: v1
 kind: Namespace
 metadata:

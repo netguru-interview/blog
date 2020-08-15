@@ -28,6 +28,16 @@ spec:
         app.kubernetes.io/version: {{ .Values.backend.image.tag }}
         app.kubernetes.io/managed-by: {{ .Release.Service }}
     spec:
+      initContainers:
+        - name: init-db
+          image: {{ .Values.image.profile }}/{{ .Values.backend.image.name }}:{{ .Values.backend.image.tag }}
+          command:
+          - "python"
+          - "manage.py"
+          - "create_db"
+          env:
+{{ include "env.project" . | indent 12 }}
+{{ include "env.postgresql" . | indent 12 }}
       containers:
         - name: backend
           image: {{ .Values.image.profile }}/{{ .Values.backend.image.name }}:{{ .Values.backend.image.tag }}

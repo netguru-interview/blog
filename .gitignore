@@ -132,3 +132,4 @@ dmypy.json
 **/charts/charts/*.tgz
 charts/secrets.yaml
 charts/requirements.lock
+.dep_check

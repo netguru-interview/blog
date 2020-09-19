@@ -9,6 +9,7 @@ def build_database_url(
     Credentials are built from environmental variables.
     :return: the database url
     """
+    project = project.replace("-", "_").upper()
     username = os.environ.get("POSTGRESQL_USER", "postgres")
     password = os.environ.get("POSTGRESQL_PASSWORD", "password")
     host = os.environ.get(f"{project}_POSTGRESQL_SERVICE_HOST".upper())

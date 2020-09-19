@@ -1,0 +1,64 @@
+---
+# yamllint disable rule:line-length
+
+name: CI/CD
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    container:
+      image: shmileee/pre-commit:latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: |
+          make test
+
+  build-images:
+    name: Build images
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build images and publish
+        env:
+          DOCKER_REPOSITORY: docker.io/shmileee
+          DOCKER_USERNAME: shmileee
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "${DOCKER_PASSWORD}" | docker login --username "$DOCKER_USERNAME" --password-stdin
+          export IMAGE_TAG=$(git rev-parse HEAD | head -c 7)
+          cd backend && make build && make publish
+
+  preview:
+    name: Deploy if PR
+    runs-on: ubuntu-latest
+    needs: build-images
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy preview environment
+        run: |
+          export IMAGE_TAG=$(git rev-parse HEAD | head -c 7)
+          export PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
+          curl -o ./argocd -L https://github.com/argoproj/argo-cd/releases/download/v1.3.0-rc4/argocd-linux-amd64 && chmod +x ./argocd
+          ./argocd app create preview-$PR_NUMBER \
+            --repo https://github.com/netguru-interview/blog-helm-charts \
+            --dest-server https://kubernetes.default.svc \
+            --dest-namespace ci \
+            --nameprefix preview-$PR_NUMBER \
+            --sync-policy automated \
+            --upsert \
+            -p backend.image.tag=$IMAGE_TAG

@@ -1,6 +1,6 @@
 # Build options
 IMAGE_NAME?="backend"
-IMAGE_TAG?="alpha"
+IMAGE_TAG?="latest"
 
 DOCKER_NO_CACHE?="false"
 

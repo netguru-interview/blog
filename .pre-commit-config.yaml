@@ -36,12 +36,3 @@ repos:
     rev: v0.8.0
     hooks:
       - id: hadolint
-  - repo: https://github.com/gruntwork-io/pre-commit
-    rev: v0.1.9
-    hooks:
-      - id: helmlint
-        files: helm-charts/.*\.((ya?ml)|(tpl))$
-        types: [yaml]
-        require_serial: true
-        exclude: ^(?!helm\-charts)
-      - id: shellcheck

@@ -1,0 +1,36 @@
+---
+# yamllint disable rule:line-length
+
+name: Preview environment cleanup
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+
+jobs:
+  delete-preview:
+    name: Delete preview environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete preview environment
+        id: delete
+        env:
+          ARGOCD_HOST: argo.kloud-native.com
+          ARGOCD_USERNAME: ${{ secrets.ARGOCD_USERNAME }}
+          ARGOCD_PASSWORD: ${{ secrets.ARGOCD_PASSWORD }}
+        run: |
+
+          curl -o argocd -L https://github.com/argoproj/argo-cd/releases/download/v1.7.6/argocd-linux-amd64 && chmod +x ./argocd
+          ./argocd login "${ARGOCD_HOST}" --grpc-web --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}" --insecure
+          ./argocd app delete preview-${{ github.event.number }} --cascade
+
+      - uses: peter-evans/create-or-update-comment@v1
+        if: github.event_name == 'pull_request'
+        with:
+          issue-number: ${{ tojson(github.event.number) }}
+          body: |
+            Preview environment https://preview-${{ github.event.number }}.kloud-native.com had been deleted.

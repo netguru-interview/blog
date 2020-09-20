@@ -31,6 +31,8 @@ jobs:
     name: Build images
     runs-on: ubuntu-latest
     needs: test
+    outputs:
+      IMAGE_TAG: ${{ steps.tag.outputs.IMAGE_TAG }}
     steps:
       - uses: actions/checkout@v2
 
@@ -39,6 +41,12 @@ jobs:
         with:
           PREFIX_FILTER: |
             backend
+
+      - name: Set image tag to latest if nothing changed
+        id: tag
+        if: ${{ !env.GIT_DIFF }}
+        run: |
+          echo "::set-output name=IMAGE_TAG::latest"
 
       - name: Build images and publish
         if: env.GIT_DIFF
@@ -58,6 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Deploy preview environment
+        id: deploy
         env:
           ARGOCD_HOST: argo.kloud-native.com
           ARGOCD_USERNAME: ${{ secrets.ARGOCD_USERNAME }}
@@ -66,12 +75,17 @@ jobs:
           POSTGRESQL_PASSWORD: ${{ secrets.POSTGRESQL_PASSWORD }}
           POSTGRESQL_DATABASE: ${{ secrets.POSTGRESQL_DATABASE }}
         run: |
-          export REF=$(git rev-parse HEAD | head -c 7)
-          echo "::set-env name=IMAGE_TAG::$REF"
+
+          if [ "${{ needs.build-images.outputs.IMAGE_TAG }}" != "latest" ]; then
+            export IMAGE_TAG=$(git rev-parse HEAD | head -c 7)
+          else
+            export IMAGE_TAG=latest
+          fi
+
           export PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
           curl -o argocd -L https://github.com/argoproj/argo-cd/releases/download/v1.7.6/argocd-linux-amd64 && chmod +x ./argocd
           ./argocd login "${ARGOCD_HOST}" --grpc-web --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}" --insecure
-          ./argocd app create preview-$IMAGE_TAG --repo https://github.com/netguru-interview/blog-helm-charts.git \
+          ./argocd app create preview-${{ github.event.number }} --repo https://github.com/netguru-interview/blog-helm-charts.git \
             --dest-server https://kubernetes.default.svc \
             --dest-namespace ci \
             --sync-policy automated \
@@ -80,12 +94,12 @@ jobs:
             -p postgresql.postgresqlUsername="${POSTGRESQL_USERNAME}" \
             -p postgresql.postgresqlPassword="${POSTGRESQL_PASSWORD}" \
             -p postgresql.postgresqlDatabase="${POSTGRESQL_DATABASE}" \
-            -p backend.image.tag="${IMAGE_TAG}" \
-            -p backend.ingress.route.hosts.blog=preview-$IMAGE_TAG.kloud-native.com
+            -p backend.image.tag=$IMAGE_TAG \
+            -p backend.ingress.route.hosts.blog=preview-${{ github.event.number }}.kloud-native.com
 
       - uses: peter-evans/create-or-update-comment@v1
+        if: github.event_name == 'pull_request'
         with:
-          issue-number: ${{ github.event.issue.number }}
+          issue-number: ${{ tojson(github.event.number) }}
           body: |
-            Preview Application URL: https://preview-$IMAGE_TAG.kloud-native.com
-          reactions: '+1'
+            Preview Application URL: https://preview-${{ github.event.number }}.kloud-native.com

@@ -5,7 +5,7 @@ services:
   web:
     build:
       context: ../backend
-    image: backend:alpha
+    image: backend:latest
     entrypoint: ["./init.sh"]
     volumes:
       - ./init.sh:/home/app/web/init.sh
